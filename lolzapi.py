@@ -1,16 +1,24 @@
 import requests
 
+class LolzteamApiClient:
+    def __init__(self, token, baseUrl=None):
+        self.baseUrl = baseUrl or 'https://api.lolz.guru/'
+        self.session = requests.session()
+        self.session.headers = {'Authorization': f"Bearer {token}"}
+
+    def get(self, url, params=None):
+        return self.session.get(self.baseUrl + url, params=params).json()
+
+    def post(self, url, data=None):
+        return self.session.post(self.baseUrl + url, data=data).json()
 
 class LolzteamApi:
-    def __init__(self, token, userid=None, baseUrl="https://api.lolz.guru/"):
-        self.token = token
+    def __init__(self, token, userid=None, baseUrl=None):
+        self.client = LolzteamApiClient(token, baseUrl)
         self.userid = userid
-        self.baseUrl = baseUrl
-        self.session = requests.session()
-        self.session.headers = {'Authorization': f'Bearer {self.token}'}
 
     def market_me(self):
-        return self.session.get(self.baseUrl + f'market/me').json()
+        return self.client.get('market/me')
 
     def market_list(self, category=None, pmin=None, pmax=None, title=None, parse_sticky_items=None):
         if category:
@@ -19,9 +27,9 @@ class LolzteamApi:
             if pmin: data['pmin'] = pmin
             if pmax: data['pmax'] = pmax
             if parse_sticky_items: data['parse_sticky_items'] = parse_sticky_items
-            return self.session.get(self.baseUrl + f'market/{category}', params=data).json()
+            return self.client.get(f'market/{category}', params=data)
         else:
-            return self.session.get(self.baseUrl + 'market').json()
+            return self.client.get('market')
 
     def market_orders(self, category=None, pmin=None, pmax=None, title=None, parse_sticky_items=None):
         if not self.userid:
@@ -32,31 +40,30 @@ class LolzteamApi:
             if pmin: data['pmin'] = pmin
             if pmax: data['pmax'] = pmax
             if parse_sticky_items: data['parse_sticky_items'] = parse_sticky_items
-            return self.session.get(self.baseUrl +
-                                    f'market/user/{self.userid}/orders/{category}', params=data).json()
+            return self.client.get(f'market/user/{self.userid}/orders/{category}', params=data)
         else:
-            return self.session.get(self.baseUrl + f'market/user/{self.userid}/orders').json()
+            return self.client.get(f'market/user/{self.userid}/orders')
 
     def market_fave(self):
-        return self.session.get(self.baseUrl + f'market/fave').json()
+        return self.client.get('market/fave')
 
     def market_viewed(self):
-        return self.session.get(self.baseUrl + f'market/viewed').json()
+        return self.client.get('market/viewed')
 
     def market_item(self, item):
-        return self.session.get(self.baseUrl + f'market/{item}').json()
+        return self.client.get(f'market/{item}')
 
     def market_reserve(self, item):
-        return self.session.post(self.baseUrl + f'market/{item}/reserve', data={'price': self.market_item(item)['item']['price']}).json()
+        return self.client.post(f'market/{item}/reserve', data={'price': self.market_item(item)['item']['price']})
 
     def market_cancel_reserve(self, item):
-        return self.session.post(self.baseUrl + f'market/{item}/cancel-reserve').json()
+        return self.client.post(f'market/{item}/cancel-reserve')
 
     def market_check_account(self, item):
-        return self.session.post(self.baseUrl + f'market/{item}/check-account').json()
+        return self.client.post(f'market/{item}/check-account')
 
     def market_confirm_buy(self, item):
-        return self.session.post(self.baseUrl + f'market/{item}/confirm-buy').json()
+        return self.client.post(f'market/{item}/confirm-buy')
 
     def market_buy(self, item):
         res = self.market_reserve(item)
@@ -82,7 +89,7 @@ class LolzteamApi:
         if hold_length_value: data['hold_length_value'] = hold_length_value
         if hold_length_option: data['hold_length_option'] = hold_length_option
 
-        return self.session.post(self.baseUrl + f'market/balance/transfer', data=data).json()
+        return self.client.post(f'market/balance/transfer', data=data)
 
     def market_payments(self, type_=None, pmin=None, pmax=None, receiver=None, sender=None, startDate=None, endDate=None, wallet=None, comment=None, is_hold=None):
         if not self.userid:
@@ -99,7 +106,7 @@ class LolzteamApi:
         if comment: data['comment'] = comment
         if is_hold: data['is_hold'] = is_hold
         print(data)
-        return self.session.get(self.baseUrl + f'market/user/{self.userid}/payments', params=data).json()
+        return self.client.get(f'market/user/{self.userid}/payments', params=data)
 
     def market_add_item(self, title, price, category_id, item_origin, extended_guarantee, currency='rub', title_en=None, description=None, information=None, has_email_login_data=None, email_login_data=None, email_type=None, allow_ask_discount=None, proxy_id=None):
         """_summary_
@@ -137,7 +144,7 @@ class LolzteamApi:
         if allow_ask_discount: data['allow_ask_discount'] = allow_ask_discount
         if proxy_id: data['proxy_id'] = proxy_id
 
-        return self.session.post(self.baseUrl + f'market/item/add', data=data).json()
+        return self.client.post(f'market/item/add', data=data)
 
     def market_add_item_check(self, item, login=None, password=None, loginpassword=None, close_item=None):
         data = {}
@@ -146,10 +153,10 @@ class LolzteamApi:
         if loginpassword: data['loginpassword'] = loginpassword
         if close_item: data['close_item'] = close_item
 
-        return self.session.post(self.baseUrl + f'market/{item}/goods/check', data=data).json()
+        return self.client.post(f'market/{item}/goods/check', data=data)
 
     def market_get_email(self, item, email):
-        return self.session.get(self.baseUrl + f'market/{item}/email-code', params={'email': email}).json()
+        return self.client.get(f'market/{item}/email-code', params={'email': email})
 
 
 class NotSetUserid(Exception):
