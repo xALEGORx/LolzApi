@@ -68,7 +68,7 @@ ____
  * `hold_length_option` - значение холда
 ____
 ### market_payments
-Перевести деньги другому пользователю
+Выводит список транзакций на аккаунте
  * `type_` - `income` `cost` `refilled_balance` `withdrawal_balance` `paid_item` `sold_item` `money_transfer` `receiving_money` `internal_purchase` `claim_hold`
  * `pmin` - минимальная сумма операции
  * `pmax` - максимальная сумма операции
