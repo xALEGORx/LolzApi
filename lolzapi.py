@@ -1,29 +1,39 @@
+from datetime import datetime
 import requests
 
 
 class LolzteamApi:
-    def __init__(self, token, userid=None, baseUrl="https://api.lolz.guru/"):
+    def __init__(self, token: str, userid: int=None, baseUrl="https://api.lolz.guru/"):
         self.token = token
         self.userid = userid
         self.baseUrl = baseUrl
         self.session = requests.session()
         self.session.headers = {'Authorization': f'Bearer {self.token}'}
 
-    def market_me(self):
-        return self.session.get(self.baseUrl + f'market/me').json()
+    def get(self, url, params={}):
+        return self.session.get(self.baseUrl + url, params=params).json()
 
-    def market_list(self, category=None, pmin=None, pmax=None, title=None, parse_sticky_items=None):
+    def post(self, url, data={}):
+        return self.session.post(self.baseUrl + url, data=data).json()
+
+    def delete(self, url, data={}):
+        return self.session.delete(url, data=data).json()
+
+    def market_me(self):
+        return self.get(f'market/me')
+
+    def market_list(self, category: str=None, pmin: int=None, pmax: int=None, title: str=None, parse_sticky_items: str=None):
         if category:
             data = {}
             if title: data['title'] = title
             if pmin: data['pmin'] = pmin
             if pmax: data['pmax'] = pmax
             if parse_sticky_items: data['parse_sticky_items'] = parse_sticky_items
-            return self.session.get(self.baseUrl + f'market/{category}', params=data).json()
+            return self.get(f'market/{category}', data)
         else:
-            return self.session.get(self.baseUrl + 'market').json()
+            return self.get('market')
 
-    def market_orders(self, category=None, pmin=None, pmax=None, title=None, parse_sticky_items=None):
+    def market_orders(self, category: str=None, pmin: int=None, pmax: int=None, title: str=None, parse_sticky_items: str=None):
         if not self.userid:
             raise NotSetUserid
         if category:
@@ -32,33 +42,32 @@ class LolzteamApi:
             if pmin: data['pmin'] = pmin
             if pmax: data['pmax'] = pmax
             if parse_sticky_items: data['parse_sticky_items'] = parse_sticky_items
-            return self.session.get(self.baseUrl +
-                                    f'market/user/{self.userid}/orders/{category}', params=data).json()
+            return self.get(f'market/user/{self.userid}/orders/{category}', data)
         else:
-            return self.session.get(self.baseUrl + f'market/user/{self.userid}/orders').json()
+            return self.get(f'market/user/{self.userid}/orders')
 
     def market_fave(self):
-        return self.session.get(self.baseUrl + f'market/fave').json()
+        return self.get(f'market/fave')
 
     def market_viewed(self):
-        return self.session.get(self.baseUrl + f'market/viewed').json()
+        return self.get(f'market/viewed')
 
     def market_item(self, item):
-        return self.session.get(self.baseUrl + f'market/{item}').json()
+        return self.get(f'market/{item}')
 
-    def market_reserve(self, item):
-        return self.session.post(self.baseUrl + f'market/{item}/reserve', data={'price': self.market_item(item)['item']['price']}).json()
+    def market_reserve(self, item: int):
+        return self.session.post(self.baseUrl + f'market/{item}/reserve', data={'price': self.market_item(item)['item']['price']})
 
-    def market_cancel_reserve(self, item):
-        return self.session.post(self.baseUrl + f'market/{item}/cancel-reserve').json()
+    def market_cancel_reserve(self, item: int):
+        return self.session.post(self.baseUrl + f'market/{item}/cancel-reserve')
 
-    def market_check_account(self, item):
-        return self.session.post(self.baseUrl + f'market/{item}/check-account').json()
+    def market_check_account(self, item: int):
+        return self.session.post(self.baseUrl + f'market/{item}/check-account')
 
-    def market_confirm_buy(self, item):
-        return self.session.post(self.baseUrl + f'market/{item}/confirm-buy').json()
+    def market_confirm_buy(self, item: int):
+        return self.session.post(self.baseUrl + f'market/{item}/confirm-buy')
 
-    def market_buy(self, item):
+    def market_buy(self, item: int):
         res = self.market_reserve(item)
         if res['status']:
             res1 = self.market_check_account(item)
@@ -69,7 +78,7 @@ class LolzteamApi:
         else:
             return res
 
-    def market_transfer(self, receiver, receiver_username, amount, secret_answer, currency='rub', comment=None, transfer_hold=None, hold_length_value=None, hold_length_option=None):
+    def market_transfer(self, receiver: int, receiver_username: str, amount: int, secret_answer: str, currency: str='rub', comment: str=None, transfer_hold: str=None, hold_length_value: str=None, hold_length_option: int=None):
         data = {
             'user_id': receiver,
             'username': receiver_username,
@@ -82,9 +91,9 @@ class LolzteamApi:
         if hold_length_value: data['hold_length_value'] = hold_length_value
         if hold_length_option: data['hold_length_option'] = hold_length_option
 
-        return self.session.post(self.baseUrl + f'market/balance/transfer', data=data).json()
+        return self.session.post(self.baseUrl + f'market/balance/transfer', data)
 
-    def market_payments(self, type_=None, pmin=None, pmax=None, receiver=None, sender=None, startDate=None, endDate=None, wallet=None, comment=None, is_hold=None):
+    def market_payments(self, type_: str=None, pmin: int=None, pmax: int=None, receiver: str=None, sender: str=None, startDate: datetime=None, endDate: datetime=None, wallet: str=None, comment: str=None, is_hold: str=None):
         if not self.userid:
             raise NotSetUserid
         data = {}
@@ -98,10 +107,9 @@ class LolzteamApi:
         if wallet: data['wallet'] = wallet
         if comment: data['comment'] = comment
         if is_hold: data['is_hold'] = is_hold
-        print(data)
-        return self.session.get(self.baseUrl + f'market/user/{self.userid}/payments', params=data).json()
+        return self.get(f'market/user/{self.userid}/payments', data)
 
-    def market_add_item(self, title, price, category_id, item_origin, extended_guarantee, currency='rub', title_en=None, description=None, information=None, has_email_login_data=None, email_login_data=None, email_type=None, allow_ask_discount=None, proxy_id=None):
+    def market_add_item(self, title: str, price: int, category_id: int, item_origin: str, extended_guarantee: int, currency: str='rub', title_en: str=None, description: str=None, information: str=None, has_email_login_data: bool=None, email_login_data: str=None, email_type: str=None, allow_ask_discount: bool=None, proxy_id: int=None):
         """_summary_
 
         Args:
@@ -137,20 +145,31 @@ class LolzteamApi:
         if allow_ask_discount: data['allow_ask_discount'] = allow_ask_discount
         if proxy_id: data['proxy_id'] = proxy_id
 
-        return self.session.post(self.baseUrl + f'market/item/add', data=data).json()
+        return self.session.post(self.baseUrl + f'market/item/add', data)
 
-    def market_add_item_check(self, item, login=None, password=None, loginpassword=None, close_item=None):
+    def market_add_item_check(self, item: int, login: str=None, password: str=None, loginpassword: str=None, close_item: bool=None):
         data = {}
         if login: data['login'] = login
         if password: data['password'] = password
         if loginpassword: data['loginpassword'] = loginpassword
         if close_item: data['close_item'] = close_item
 
-        return self.session.post(self.baseUrl + f'market/{item}/goods/check', data=data).json()
+        return self.session.post(self.baseUrl + f'market/{item}/goods/check', data)
 
-    def market_get_email(self, item, email):
-        return self.session.get(self.baseUrl + f'market/{item}/email-code', params={'email': email}).json()
+    def market_get_email(self, item: int, email: str):
+        return self.get(f'market/{item}/email-code', {'email': email})
 
+    def market_refuse_guarantee(self, item: int):
+        return self.post(f'market/{item}/refuse-guarantee')
+    
+    def market_change_password(self, item: int):
+        return self.post(f'market/{item}/change-password')
+    
+    def market_delete(self, item: int, reason: str):
+        return self.delete(f'market/{item}/delete', {'reason': reason})
+
+    def market_bump(self, item: int):
+        return self.post(f'market/{item}/bump')
 
 class NotSetUserid(Exception):
     pass
