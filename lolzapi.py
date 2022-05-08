@@ -22,18 +22,19 @@ class LolzteamApi:
     def market_me(self):
         return self.get(f'market/me')
 
-    def market_list(self, category: str=None, pmin: int=None, pmax: int=None, title: str=None, parse_sticky_items: str=None):
+    def market_list(self, category: str=None, pmin: int=None, pmax: int=None, title: str=None, parse_sticky_items: str=None, optional: dict=None):
         if category:
             data = {}
             if title: data['title'] = title
             if pmin: data['pmin'] = pmin
             if pmax: data['pmax'] = pmax
             if parse_sticky_items: data['parse_sticky_items'] = parse_sticky_items
+            if optional: data = {**data, **optional}
             return self.get(f'market/{category}', data)
         else:
             return self.get('market')
 
-    def market_orders(self, category: str=None, pmin: int=None, pmax: int=None, title: str=None, parse_sticky_items: str=None):
+    def market_orders(self, category: str=None, pmin: int=None, pmax: int=None, title: str=None, showStickyItems: str=None, optional: dict=None):
         if not self.userid:
             raise NotSetUserid
         if category:
@@ -41,7 +42,8 @@ class LolzteamApi:
             if title: data['title'] = title
             if pmin: data['pmin'] = pmin
             if pmax: data['pmax'] = pmax
-            if parse_sticky_items: data['parse_sticky_items'] = parse_sticky_items
+            if showStickyItems: data['showStickyItems'] = showStickyItems
+            if optional: data = {**data, **optional}
             return self.get(f'market/user/{self.userid}/orders/{category}', data)
         else:
             return self.get(f'market/user/{self.userid}/orders')
